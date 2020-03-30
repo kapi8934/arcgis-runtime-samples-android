@@ -16,12 +16,14 @@
 
 package com.esri.arcgisruntime.sample.editfeatureattachments;
 
+import java.io.File;
 import java.util.List;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -36,14 +38,18 @@ import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.ArcGISFeature;
 import com.esri.arcgisruntime.data.Attachment;
 import com.esri.arcgisruntime.data.ServiceFeatureTable;
+import com.esri.arcgisruntime.geometry.Point;
 import com.esri.arcgisruntime.layers.FeatureLayer;
+import com.esri.arcgisruntime.loadable.LoadStatus;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
 import com.esri.arcgisruntime.mapping.GeoElement;
+import com.esri.arcgisruntime.mapping.MobileMapPackage;
 import com.esri.arcgisruntime.mapping.view.Callout;
 import com.esri.arcgisruntime.mapping.view.DefaultMapViewOnTouchListener;
 import com.esri.arcgisruntime.mapping.view.IdentifyLayerResult;
 import com.esri.arcgisruntime.mapping.view.MapView;
+import com.esri.arcgisruntime.sample.EditAttachmentsApplication;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,16 +68,55 @@ public class MainActivity extends AppCompatActivity {
   private List<Attachment> attachments;
   private String mSelectedArcGISFeatureAttributeValue;
   private String mAttributeID;
+  private MobileMapPackage mapPackage;
+
+  private static String createMobileMapAreaPath() {
+    // Use this map area to reproduce the issue
+    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachmentIssue";
+    // Use following map area to see the correct behavior
+//    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachmentWorking";
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+    String mmpkFilePath = createMobileMapAreaPath();
+    loadMobileMapPackage(mmpkFilePath);
+
 
     // get a reference to the map view
     mMapView = findViewById(R.id.mapView);
-    // create a map with the streets basemap
-    ArcGISMap map = new ArcGISMap(Basemap.Type.STREETS, 44.354388, -119.998245, 5);
+
+  }
+
+  private void loadMobileMapPackage(String mmpkFile) {
+    //[DocRef: Name=Open Mobile Map Package-android, Category=Work with maps, Topic=Create an offline map]
+    // create the mobile map package
+    mapPackage = new MobileMapPackage(mmpkFile);
+    // load the mobile map package asynchronously
+    mapPackage.loadAsync();
+
+    // add done listener which will invoke when mobile map package has loaded
+    mapPackage.addDoneLoadingListener(new Runnable() {
+      @Override
+      public void run() {
+        // check load status and that the mobile map package has maps
+        if (mapPackage.getLoadStatus() == LoadStatus.LOADED && !mapPackage.getMaps().isEmpty()) {
+          // add the map from the mobile map package to the MapView
+          ArcGISMap map = mapPackage.getMaps().get(0);
+          mMapView.setMap(map);
+          onMapLoaded(map);
+        } else {
+          // log an issue if the mobile map package fails to load
+          Log.e(TAG, mapPackage.getLoadError().getMessage());
+        }
+      }
+    });
+    //[DocRef: END]
+  }
+
+  private void onMapLoaded(ArcGISMap map) {
     // set the map to be displayed in the map view
     mMapView.setMap(map);
 
@@ -81,6 +126,9 @@ public class MainActivity extends AppCompatActivity {
     createCallout();
     // get callout, set content and show
     mCallout = mMapView.getCallout();
+
+    mFeatureLayer = (FeatureLayer) map.getOperationalLayers().get(0);
+    /*
     // create feature layer with its service feature table and create the service feature table
     ServiceFeatureTable mServiceFeatureTable = new ServiceFeatureTable(getString(R.string.sample_service_url));
     mServiceFeatureTable.setFeatureRequestMode(ServiceFeatureTable.FeatureRequestMode.ON_INTERACTION_CACHE);
@@ -89,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
 
     // add the layer to the map
     map.getOperationalLayers().add(mFeatureLayer);
+    */
 
     mMapView.setOnTouchListener(new DefaultMapViewOnTouchListener(this, mMapView) {
       @Override
@@ -118,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
                 if (resultGeoElements.get(0) instanceof ArcGISFeature) {
                   progressDialog.show();
                   mSelectedArcGISFeature = (ArcGISFeature) resultGeoElements.get(0);
+                  ((EditAttachmentsApplication)getApplication()).feature = mSelectedArcGISFeature;
                   // highlight the selected feature
                   mFeatureLayer.selectFeature(mSelectedArcGISFeature);
                   mAttributeID = mSelectedArcGISFeature.getAttributes().get("objectid").toString();
@@ -171,7 +221,9 @@ public class MainActivity extends AppCompatActivity {
     String attachmentText = getString(R.string.attachment_info_message) + noOfAttachments;
     calloutAttachment.setText(attachmentText);
 
-    mCallout.setGeoElement(mSelectedArcGISFeature, null);
+    Point mapPoint = mMapView.screenToLocation(mClickPoint);
+
+    mCallout.setGeoElement(mSelectedArcGISFeature, mapPoint);
     mCallout.setContent(mCalloutLayout);
     mCallout.show();
   }
@@ -253,7 +305,6 @@ public class MainActivity extends AppCompatActivity {
     public void onClick(View v) {
       // start EditAttachmentActivity to view/edit the attachments
       Intent myIntent = new Intent(MainActivity.this, EditAttachmentActivity.class);
-      myIntent.putExtra(getString(R.string.attribute), mAttributeID);
       myIntent.putExtra(getString(R.string.noOfAttachments), attachments.size());
       Bundle bundle = new Bundle();
       startActivityForResult(myIntent, REQUEST_CODE, bundle);

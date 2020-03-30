@@ -18,6 +18,8 @@ allprojects {
         google()
         jcenter()
         maven { url 'https://esri.bintray.com/arcgis' }
+        // Internal esri artifactory repository
+        maven { url 'http://olympus.esri.com/artifactory/arcgisruntime-repo/' }
     }
     var
 }
@@ -28,7 +30,7 @@ subprojects{
             dependencies {
                 implementation "com.android.support:appcompat-v7:$andSupportLibVersion"
                 implementation "com.android.support:design:$andSupportLibVersion"
-                implementation "com.esri.arcgisruntime:arcgis-android:$arcgisVersion"
+                implementation "com.esri.apps:arcgis-android-internalAPI:100.7.0-2632"
             }
         }
         project.android {

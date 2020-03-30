@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import android.Manifest;
 import android.app.ProgressDialog;
@@ -58,6 +59,7 @@ import com.esri.arcgisruntime.data.FeatureEditResult;
 import com.esri.arcgisruntime.data.FeatureQueryResult;
 import com.esri.arcgisruntime.data.QueryParameters;
 import com.esri.arcgisruntime.data.ServiceFeatureTable;
+import com.esri.arcgisruntime.sample.EditAttachmentsApplication;
 import com.esri.arcgisruntime.sample.arrayadapter.CustomList;
 
 public class EditAttachmentActivity extends AppCompatActivity {
@@ -72,7 +74,6 @@ public class EditAttachmentActivity extends AppCompatActivity {
     private final String[] permission = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
     private List<Attachment> attachments;
     private ArcGISFeature mSelectedArcGISFeature;
-    private ServiceFeatureTable mServiceFeatureTable;
     private String mAttributeID;
     private ListView list;
     private ArrayList<String> attachmentList = new ArrayList<>();
@@ -88,7 +89,6 @@ public class EditAttachmentActivity extends AppCompatActivity {
         setContentView(R.layout.attachments);
 
         Bundle bundle = getIntent().getExtras();
-        String s = bundle.getString(getString(R.string.attribute));
         noOfAttachments = bundle.getInt(getApplication().getString(R.string.noOfAttachments));
 
         // Build a alert dialog with specified style
@@ -111,7 +111,7 @@ public class EditAttachmentActivity extends AppCompatActivity {
             }
         });
 
-        mServiceFeatureTable = new ServiceFeatureTable(getResources().getString(R.string.sample_service_url));
+//        mServiceFeatureTable = new ServiceFeatureTable(getResources().getString(R.string.sample_service_url));
 
         progressDialog = new ProgressDialog(this);
 
@@ -131,7 +131,7 @@ public class EditAttachmentActivity extends AppCompatActivity {
         adapter = new CustomList(EditAttachmentActivity.this, attachmentList);
         // set custom adapter on the list
         list.setAdapter(adapter);
-        fetchAttachmentsFromServer(s);
+        fetchAttachments();
 
         // listener on attachment items to download the attachment
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -243,85 +243,55 @@ public class EditAttachmentActivity extends AppCompatActivity {
         deleteResult.addDoneListener(new Runnable() {
             @Override
             public void run() {
-                ListenableFuture<Void> tableResult = mServiceFeatureTable.updateFeatureAsync(mSelectedArcGISFeature);
-                // apply changes back to the server
-                tableResult.addDoneListener(new Runnable() {
-                    @Override
-                    public void run() {
-                        applyServerEdits();
-                    }
-                });
+                System.out.println("@@@ Attachment deleted successfully "+ deleteResult.isDone());
+                onFeatureAttachmentsUpdated();
             }
         });
     }
 
-
     /**
      * Asynchronously fetch the attachments to view as a list
      *
-     * @param objectID
      */
-    private void fetchAttachmentsFromServer(String objectID) {
+    private void fetchAttachments() {
         attachmentList = new ArrayList<>();
-        // create objects required to do a selection with a query
-        QueryParameters query = new QueryParameters();
-        // set the where clause of the query
-        query.setWhereClause("OBJECTID = " + objectID);
-
-        // query the feature table
-        final ListenableFuture<FeatureQueryResult> future = mServiceFeatureTable.queryFeaturesAsync(query);
-
-        future.addDoneListener(new Runnable() {
+        mSelectedArcGISFeature = ((EditAttachmentsApplication)getApplication()).feature;
+        // get the number of attachments
+        final ListenableFuture<List<Attachment>> attachmentResults = mSelectedArcGISFeature.fetchAttachmentsAsync();
+        attachmentResults.addDoneListener(new Runnable() {
             @Override
             public void run() {
                 try {
-                    FeatureQueryResult result = future.get();
-                    Feature feature = result.iterator().next();
-                    mSelectedArcGISFeature = (ArcGISFeature) feature;
-                    // get the number of attachments
-                    final ListenableFuture<List<Attachment>> attachmentResults = mSelectedArcGISFeature.fetchAttachmentsAsync();
-                    attachmentResults.addDoneListener(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
 
-                                attachments = attachmentResults.get();
-                                // if selected feature has attachments, display them in a list fashion
-                                if (!attachments.isEmpty()) {
-                                    //
-                                    for (Attachment attachment : attachments) {
-                                        attachmentList.add(attachment.getName());
-                                    }
-
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-
-                                            if (progressDialog.isShowing()) {
-                                                progressDialog.dismiss();
-                                            }
-                                            adapter = new CustomList(EditAttachmentActivity.this, attachmentList);
-                                            list.setAdapter(adapter);
-                                            adapter.notifyDataSetChanged();
-                                        }
-                                    });
-
-                                }
-
-
-                            } catch (Exception e) {
-                                Log.e(TAG, e.getMessage());
-                            }
+                    attachments = attachmentResults.get();
+                    // if selected feature has attachments, display them in a list fashion
+                    if (!attachments.isEmpty()) {
+                        //
+                        for (Attachment attachment : attachments) {
+                            attachmentList.add(attachment.getName());
                         }
-                    });
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                if (progressDialog.isShowing()) {
+                                    progressDialog.dismiss();
+                                }
+                                adapter = new CustomList(EditAttachmentActivity.this, attachmentList);
+                                list.setAdapter(adapter);
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
+
+                    }
+
 
                 } catch (Exception e) {
-                    Log.e(TAG, e.toString());
+                    Log.e(TAG, e.getMessage());
                 }
             }
         });
-
-
     }
 
 
@@ -400,13 +370,8 @@ public class EditAttachmentActivity extends AppCompatActivity {
                 addResult.addDoneListener(new Runnable() {
                     @Override
                     public void run() {
-                        final ListenableFuture<Void> tableResult = mServiceFeatureTable.updateFeatureAsync(mSelectedArcGISFeature);
-                        tableResult.addDoneListener(new Runnable() {
-                            @Override
-                            public void run() {
-                                applyServerEdits();
-                            }
-                        });
+                        System.out.println("@@@ Attachment added successfully "+ addResult.isDone());
+                        onFeatureAttachmentsUpdated();
                     }
                 });
             }
@@ -415,48 +380,20 @@ public class EditAttachmentActivity extends AppCompatActivity {
 
     }
 
-    /**
-     * Applies changes from a Service Feature Table to the server.
-     */
-    private void applyServerEdits() {
-
-        try {
-            // check that the feature table was successfully updated
-            // apply edits to the server
-            final ListenableFuture<List<FeatureEditResult>> updatedServerResult = mServiceFeatureTable.applyEditsAsync();
-            updatedServerResult.addDoneListener(new Runnable() {
-
-                @Override
-                public void run() {
-
-
-                    try {
-                        List<FeatureEditResult> edits = updatedServerResult.get();
-                        if (edits.size() > 0) {
-                            if (!edits.get(0).hasCompletedWithErrors()) {
-                                if (progressDialog.isShowing()) {
-                                    progressDialog.dismiss();
-                                }
-                                //attachmentList.add(fileName);
-                                mAttributeID = mSelectedArcGISFeature.getAttributes().get("objectid").toString();
-                                fetchAttachmentsFromServer(mAttributeID);
-                                // update the attachment list view on the control panel
-                                Toast.makeText(EditAttachmentActivity.this, getApplication().getString(R.string.success_message), Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(EditAttachmentActivity.this, getApplication().getString(R.string.failure_message), Toast.LENGTH_SHORT).show();
-                            }
-                        } else {
-                            Toast.makeText(EditAttachmentActivity.this, getApplication().getString(R.string.failure_edit_results), Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+    private void onFeatureAttachmentsUpdated() {
+        ListenableFuture<Long> updatedFeaturesCountAsync = mSelectedArcGISFeature.getFeatureTable().getUpdatedFeaturesCountAsync();
+        updatedFeaturesCountAsync.addDoneListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Long count = updatedFeaturesCountAsync.get();
+                    System.out.println("@@@ Added count : "+count);
+                    fetchAttachments();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            });
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            }
+        });
     }
 
     /**
