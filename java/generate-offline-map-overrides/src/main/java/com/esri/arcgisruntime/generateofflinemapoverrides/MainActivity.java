@@ -28,10 +28,10 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -266,6 +266,8 @@ public class MainActivity extends AppCompatActivity {
     generateOfflineMapParametersFuture.addDoneListener(() -> {
       try {
         final GenerateOfflineMapParameters generateOfflineMapParameters = generateOfflineMapParametersFuture.get();
+        // don't let generate offline map parameters continue on errors (including canceling during authentication)
+        generateOfflineMapParameters.setContinueOnErrors(false);
         // create parameter overrides for greater control
         ListenableFuture<GenerateOfflineMapParameterOverrides> parameterOverridesFuture = offlineMapTask
             .createGenerateOfflineMapParameterOverridesAsync(generateOfflineMapParameters);

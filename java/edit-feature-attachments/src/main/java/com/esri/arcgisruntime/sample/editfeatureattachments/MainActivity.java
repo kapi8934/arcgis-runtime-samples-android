@@ -24,8 +24,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,6 +31,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.ArcGISFeature;
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
   private static String createMobileMapAreaPath() {
     // Use this map area to reproduce the issue
-    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachmentIssue";
+    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachment";
     // Use following map area to see the correct behavior
 //    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachmentWorking";
   }

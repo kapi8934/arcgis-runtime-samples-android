@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutionException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -130,6 +130,14 @@ public class MainActivity extends AppCompatActivity {
       }
     });
     portal.loadAsync();
+  }
+  
+  @Override 
+  protected void onPause() {
+    // normally, you won't want to clear credentials once a device has been verified. These calls are made to keep this
+    // sample from interfering with other authentication samples
+    AuthenticationManager.CredentialCache.clear();
+    super.onPause();
   }
 }
 

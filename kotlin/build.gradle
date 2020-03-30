@@ -22,19 +22,23 @@ allprojects {
     var
 }
 
-subprojects{
-    afterEvaluate {project ->
-        if(project.hasProperty("dependencies")){
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("dependencies")) {
             dependencies {
-                implementation "com.android.support:appcompat-v7:$andSupportLibVersion"
+                implementation "androidx.appcompat:appcompat:$andSupportLibVersion"
                 implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
                 implementation "com.esri.arcgisruntime:arcgis-android:$arcgisVersion"
+                implementation "androidx.multidex:multidex:$multidexVersion"
             }
         }
         project.android {
             compileOptions {
                 sourceCompatibility rootProject.ext.javaVersion
                 targetCompatibility rootProject.ext.javaVersion
+            }
+            defaultConfig {
+                multiDexEnabled true
             }
         }
     }

@@ -18,7 +18,7 @@ package com.esri.arcgisruntime.sample.featurelayerextrusion;
 
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.esri.arcgisruntime.data.ServiceFeatureTable
 import com.esri.arcgisruntime.geometry.Point
 import com.esri.arcgisruntime.geometry.SpatialReferences
@@ -43,7 +43,8 @@ class MainActivity : AppCompatActivity() {
     setContentView(R.layout.activity_main)
 
     // get us census data as a service feature table
-    val statesServiceFeatureTable = ServiceFeatureTable(resources.getString(R.string.us_census_feature_service))
+    val statesServiceFeatureTable =
+      ServiceFeatureTable(resources.getString(R.string.us_census_feature_service))
 
     // add the service feature table to a feature layer
     val statesFeatureLayer = FeatureLayer(statesServiceFeatureTable)
@@ -76,7 +77,7 @@ class MainActivity : AppCompatActivity() {
     sceneView.setViewpointCamera(camera)
 
     // set button listener
-    toggle_button.setOnClickListener{
+    toggle_button.setOnClickListener {
       if (showTotalPopulation) {
         // divide total population by 10 to make data legible
         renderer.sceneProperties.extrusionExpression = "[POP2007] / 10"
