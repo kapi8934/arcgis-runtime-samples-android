@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
   private static String createMobileMapAreaPath() {
     // Use this map area to reproduce the issue
-    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachment";
+    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachmentIssue";
     // Use following map area to see the correct behavior
 //    return Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ArcGIS/EditAttachmentWorking";
   }
