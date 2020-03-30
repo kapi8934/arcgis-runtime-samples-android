@@ -387,7 +387,7 @@ public class EditAttachmentActivity extends AppCompatActivity {
             public void run() {
                 try {
                     Long count = updatedFeaturesCountAsync.get();
-                    System.out.println("@@@ Added count : "+count);
+                    System.out.println("@@@ Updated count : "+count);
                     fetchAttachments();
                 } catch (Exception e) {
                     e.printStackTrace();
