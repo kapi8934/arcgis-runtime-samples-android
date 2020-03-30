@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat;
 
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.ArcGISFeature;
+import com.esri.arcgisruntime.data.ArcGISFeatureTable;
 import com.esri.arcgisruntime.data.Attachment;
 import com.esri.arcgisruntime.data.ServiceFeatureTable;
 import com.esri.arcgisruntime.geometry.Point;
@@ -169,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
                   progressDialog.show();
                   mSelectedArcGISFeature = (ArcGISFeature) resultGeoElements.get(0);
                   ((EditAttachmentsApplication)getApplication()).feature = mSelectedArcGISFeature;
+                  ((EditAttachmentsApplication)getApplication()).featureTable = (ArcGISFeatureTable) mFeatureLayer.getFeatureTable();
                   // highlight the selected feature
                   mFeatureLayer.selectFeature(mSelectedArcGISFeature);
                   mAttributeID = mSelectedArcGISFeature.getAttributes().get("objectid").toString();

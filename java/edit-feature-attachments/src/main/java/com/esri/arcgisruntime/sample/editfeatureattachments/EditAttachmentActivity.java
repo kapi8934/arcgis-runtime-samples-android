@@ -38,6 +38,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import androidx.annotation.NonNull;
+
+import com.esri.arcgisruntime.data.ArcGISFeatureTable;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -74,6 +76,7 @@ public class EditAttachmentActivity extends AppCompatActivity {
     private final String[] permission = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
     private List<Attachment> attachments;
     private ArcGISFeature mSelectedArcGISFeature;
+    private ArcGISFeatureTable mSelectedArcGISFeatureTable;
     private String mAttributeID;
     private ListView list;
     private ArrayList<String> attachmentList = new ArrayList<>();
@@ -82,6 +85,7 @@ public class EditAttachmentActivity extends AppCompatActivity {
     private boolean permissionsGranted = false;
     private int listPosition;
     private View listView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -256,6 +260,7 @@ public class EditAttachmentActivity extends AppCompatActivity {
     private void fetchAttachments() {
         attachmentList = new ArrayList<>();
         mSelectedArcGISFeature = ((EditAttachmentsApplication)getApplication()).feature;
+        mSelectedArcGISFeatureTable = ((EditAttachmentsApplication)getApplication()).featureTable;
         // get the number of attachments
         final ListenableFuture<List<Attachment>> attachmentResults = mSelectedArcGISFeature.fetchAttachmentsAsync();
         attachmentResults.addDoneListener(new Runnable() {
@@ -381,7 +386,7 @@ public class EditAttachmentActivity extends AppCompatActivity {
     }
 
     private void onFeatureAttachmentsUpdated() {
-        ListenableFuture<Long> updatedFeaturesCountAsync = mSelectedArcGISFeature.getFeatureTable().getUpdatedFeaturesCountAsync();
+        ListenableFuture<Long> updatedFeaturesCountAsync = mSelectedArcGISFeatureTable.getUpdatedFeaturesCountAsync();
         updatedFeaturesCountAsync.addDoneListener(new Runnable() {
             @Override
             public void run() {
