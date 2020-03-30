@@ -30,7 +30,7 @@ subprojects{
             dependencies {
                 implementation "com.android.support:appcompat-v7:$andSupportLibVersion"
                 implementation "com.android.support:design:$andSupportLibVersion"
-                implementation "com.esri.apps:arcgis-android-internalAPI:100.7.0-2632"
+                implementation "com.esri.apps:arcgis-android-internalAPI:100.7.0-2600"
             }
         }
         project.android {
